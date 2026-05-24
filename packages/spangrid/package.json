@@ -1,0 +1,46 @@
+{
+  "name": "@pomelo-suite/spangrid",
+  "version": "0.1.0",
+  "description": "Canvas span grid control for Pomelo Suite.",
+  "license": "MIT",
+  "author": "xamongmini",
+  "private": false,
+  "type": "commonjs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xamongmini/pomelo-suite.git",
+    "directory": "packages/spangrid"
+  },
+  "bugs": {
+    "url": "https://github.com/xamongmini/pomelo-suite/issues"
+  },
+  "homepage": "https://github.com/xamongmini/pomelo-suite/tree/main/packages/spangrid#readme",
+  "main": "src/span-grid.js",
+  "browser": "src/span-grid.js",
+  "exports": {
+    ".": {
+      "browser": "./src/span-grid.js",
+      "require": "./src/span-grid.js",
+      "default": "./src/span-grid.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src",
+    "docs",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "keywords": [
+    "pomelo-suite",
+    "grid",
+    "canvas",
+    "data-grid"
+  ],
+  "pomeloSuite": {
+    "stability": "stable"
+  }
+}

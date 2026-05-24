@@ -1,36 +1,31 @@
-# 🍊 Pomelo Suite
+# Pomelo Suite
 
-> Open-source extended UI components and libraries for web development.
+Open-source web UI components for Pomelo Suite.
 
-Pomelo Suite is a growing collection of UI components and utilities designed to fill the gaps that standard libraries leave behind — extended inputs, data grids, scheduling tools, and more.
+The public workspace currently starts with SpanGrid. Additional components will
+be added here as they are prepared, documented, and ready for release.
 
-## Packages
+## Package
 
-| Package | Description | Status |
+| Package | Install | Purpose |
 |---|---|---|
-| `@pomelo-suite/spangrid` | Advanced data grid with span support | 🚧 Coming soon |
-| `@pomelo-suite/input` | Extended input components | 🚧 Coming soon |
-| `@pomelo-suite/color-picker` | Enhanced color picker | 🚧 Coming soon |
-| `@pomelo-suite/timeline` | Interactive timeline UI | 🚧 Coming soon |
-| `@pomelo-suite/calculator` | Embeddable calculator component | 🚧 Coming soon |
-| `@pomelo-suite/workqueue` | Work queue UI component | 🚧 Coming soon |
-| `@pomelo-suite/scheduler` | Scheduling and calendar component | 🚧 Coming soon |
+| `@pomelo-suite/spangrid` | `npm install @pomelo-suite/spangrid` | Advanced data grid with span support |
 
-## Getting Started
+## Workspace
 
-Each package is independently installable via npm.
+This repository uses npm workspaces and points only at `packages/spangrid`.
+The package includes its own README, license, package manifest, source, docs,
+and focused tests. Browser examples live under `examples/spangrid`.
 
 ```bash
-npm install @pomelo-suite/spangrid
-npm install @pomelo-suite/input
-# ... and more
+npm run check
+npm run pack:dry-run
 ```
 
-> Individual package documentation is available in each package directory.
+## Examples
 
-## Contributing
-
-Contributions are welcome. Please open an issue or pull request.
+Open `examples/spangrid/index.html` or `examples/spangrid/showcase.html` in a
+browser. They are static HTML files and do not require a local server.
 
 ## License
 

@@ -1,0 +1,1404 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SpanGrid JavaScript Demo</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f6f8;
+      --panel: #ffffff;
+      --ink: #17202f;
+      --muted: #667085;
+      --line: #d8dee7;
+      --accent: #0f766e;
+      --accent-strong: #115e59;
+      --danger: #b42318;
+      --focus: #d92d20;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background: var(--bg);
+      font: 14px/1.45 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .app {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      min-height: 100vh;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel);
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 6px;
+      margin-right: 14px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .version {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .zoom-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 32px;
+      margin-right: 10px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .zoom-control input {
+      width: 120px;
+    }
+
+    .zoom-value {
+      min-width: 42px;
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+
+    .mode-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 32px;
+      margin-right: 10px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .mode-control select {
+      min-height: 32px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 0 8px;
+      color: var(--ink);
+      background: #fff;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button {
+      min-height: 32px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 0 11px;
+      color: var(--ink);
+      background: #fff;
+      cursor: pointer;
+    }
+
+    button:hover {
+      border-color: #98a2b3;
+      background: #f9fafb;
+    }
+
+    button.primary {
+      border-color: var(--accent);
+      color: #fff;
+      background: var(--accent);
+    }
+
+    button.primary:hover {
+      background: var(--accent-strong);
+    }
+
+    button.danger {
+      color: var(--danger);
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      min-height: 0;
+    }
+
+    .stage {
+      min-width: 0;
+      min-height: 0;
+      padding: 14px;
+    }
+
+    .grid-shell {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 18px;
+      grid-template-rows: minmax(0, 1fr) 28px;
+      position: relative;
+      width: 100%;
+      height: calc(100vh - 89px);
+      min-height: 320px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+    }
+
+    canvas {
+      grid-column: 1;
+      grid-row: 1;
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: default;
+    }
+
+    .span-grid-cell-editor {
+      border: 2px solid var(--accent);
+      border-radius: 3px;
+      padding: 0 5px;
+      color: var(--ink);
+      background: #fff;
+      outline: none;
+      box-shadow: 0 1px 4px rgba(15, 23, 42, 0.18);
+    }
+
+    .span-grid-html-cell {
+      line-height: 1.25;
+    }
+
+    .span-grid-html-cell .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 20px;
+      border-radius: 999px;
+      padding: 0 8px;
+      color: #0f766e;
+      background: #ccfbf1;
+      font-weight: 700;
+    }
+
+    .span-grid-html-cell .badge,
+    .span-grid-html-cell .delta,
+    .span-grid-html-cell .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 20px;
+      border-radius: 999px;
+      padding: 0 8px;
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .span-grid-html-cell .badge.teal,
+    .span-grid-html-cell .pill.good,
+    .span-grid-html-cell .delta.up {
+      color: #0f766e;
+      background: #ccfbf1;
+    }
+
+    .span-grid-html-cell .badge.blue,
+    .span-grid-html-cell .pill.info {
+      color: #1d4ed8;
+      background: #dbeafe;
+    }
+
+    .span-grid-html-cell .badge.coral,
+    .span-grid-html-cell .pill.hot {
+      color: #be123c;
+      background: #ffe4e6;
+    }
+
+    .span-grid-html-cell .badge.amber,
+    .span-grid-html-cell .pill.watch {
+      color: #92400e;
+      background: #fef3c7;
+    }
+
+    .span-grid-html-cell .badge.plum {
+      color: #6d28d9;
+      background: #ede9fe;
+    }
+
+    .span-grid-html-cell .metric,
+    .span-grid-html-cell .meta {
+      width: 100%;
+      display: grid;
+      gap: 3px;
+      min-width: 0;
+    }
+
+    .span-grid-html-cell .metric em,
+    .span-grid-html-cell .meta span,
+    .span-grid-html-cell .quote {
+      color: #667085;
+      font-style: normal;
+      font-size: 11px;
+    }
+
+    .span-grid-html-cell .metric strong {
+      font-size: 22px;
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .span-grid-html-cell .person,
+    .span-grid-html-cell .product {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .span-grid-html-cell .avatar,
+    .span-grid-html-cell .thumb {
+      flex: 0 0 auto;
+      width: 34px;
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .span-grid-html-cell .avatar.teal,
+    .span-grid-html-cell .thumb.teal {
+      background: #0f766e;
+    }
+
+    .span-grid-html-cell .avatar.blue,
+    .span-grid-html-cell .thumb.blue {
+      background: #2563eb;
+    }
+
+    .span-grid-html-cell .avatar.coral,
+    .span-grid-html-cell .thumb.coral {
+      background: #e04f3f;
+    }
+
+    .span-grid-html-cell .avatar.amber,
+    .span-grid-html-cell .thumb.amber {
+      background: #b7791f;
+    }
+
+    .span-grid-html-cell .avatar.plum,
+    .span-grid-html-cell .thumb.plum {
+      background: #7c3aed;
+    }
+
+    .span-grid-html-cell .bar {
+      width: 100%;
+      height: 9px;
+      display: block;
+      border-radius: 999px;
+      background: #e8edf3;
+      overflow: hidden;
+    }
+
+    .span-grid-html-cell .bar i {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: #0f766e;
+    }
+
+    .span-grid-html-cell .stars {
+      color: #b7791f;
+      font-weight: 900;
+      letter-spacing: 1px;
+    }
+
+    .span-grid-html-cell .price {
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .scroll-y {
+      grid-column: 2;
+      grid-row: 1;
+      width: 18px;
+      height: 100%;
+      writing-mode: vertical-rl;
+      direction: rtl;
+    }
+
+    .scroll-x {
+      grid-column: 1;
+      grid-row: 2;
+      width: 100%;
+      height: 28px;
+    }
+
+    .corner {
+      grid-column: 2;
+      grid-row: 2;
+      border-left: 1px solid var(--line);
+      border-top: 1px solid var(--line);
+      background: #eef2f6;
+    }
+
+    .inspector {
+      min-height: 0;
+      border-left: 1px solid var(--line);
+      background: var(--panel);
+      padding: 16px;
+      overflow: auto;
+    }
+
+    .inspector h2 {
+      margin: 0 0 14px;
+      font-size: 16px;
+    }
+
+    .status {
+      min-height: 34px;
+      display: flex;
+      align-items: center;
+      padding: 7px 9px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      color: var(--muted);
+      background: #f8fafc;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+      margin-top: 13px;
+    }
+
+    .field span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .field input[type="text"],
+    .field input[type="number"],
+    .field input[type="url"],
+    .field select {
+      width: 100%;
+      min-height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 0 9px;
+      color: var(--ink);
+      background: #fff;
+    }
+
+    .swatches {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .split-fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .property-section {
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+    }
+
+    .section-title {
+      margin: 0 0 2px;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .check {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .check-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 12px;
+      margin-top: 12px;
+    }
+
+    .stack {
+      display: grid;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .log {
+      min-height: 78px;
+      margin: 12px 0 0;
+      padding: 9px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      color: #344054;
+      background: #f8fafc;
+      white-space: pre-wrap;
+    }
+
+    .json-area {
+      width: 100%;
+      min-height: 120px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 9px;
+      color: var(--ink);
+      background: #fff;
+      font: 12px/1.45 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    }
+
+    @media (max-width: 820px) {
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+
+      .inspector {
+        border-left: 0;
+        border-top: 1px solid var(--line);
+      }
+
+      .grid-shell {
+        height: 58vh;
+      }
+
+      .toolbar {
+        flex-wrap: wrap;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="toolbar">
+      <div class="brand">SpanGrid <span id="version" class="version">v0.1.0</span></div>
+      <label class="zoom-control">
+        <span>Zoom</span>
+        <input id="zoom" type="range" min="50" max="200" step="10" value="100">
+        <output id="zoomValue" class="zoom-value">100%</output>
+      </label>
+      <label class="mode-control">
+        <span>Scroll</span>
+        <select id="scrollMode">
+          <option value="pixel">Mouse delta</option>
+          <option value="cell">Cell snap</option>
+        </select>
+      </label>
+      <label class="mode-control">
+        <span>Paste</span>
+        <select id="pasteOverflow">
+          <option value="truncate">Truncate overflow</option>
+          <option value="expand">Auto-add rows/cols</option>
+        </select>
+      </label>
+      <button id="addRow">+ Row</button>
+      <button id="addCol">+ Column</button>
+      <button id="merge" class="primary">Merge</button>
+      <button id="split">Split</button>
+      <button id="fix">Fix</button>
+      <button id="clearFix">Clear Fix</button>
+      <button id="clearMerge" class="danger">Clear Merges</button>
+    </header>
+
+    <main class="workspace">
+      <section class="stage">
+        <div class="grid-shell">
+          <canvas id="gridCanvas" width="900" height="500"></canvas>
+          <input id="vScroll" class="scroll-y" type="range" min="0" max="0" value="0" aria-label="Vertical scroll">
+          <input id="hScroll" class="scroll-x" type="range" min="0" max="0" value="0" aria-label="Horizontal scroll">
+          <div class="corner"></div>
+        </div>
+      </section>
+
+      <aside class="inspector">
+        <h2>Selection</h2>
+        <div id="status" class="status">0 cells selected</div>
+        <button id="selectGrid" class="stack">Select Grid Properties</button>
+
+        <section id="cellSection" class="property-section">
+          <p class="section-title">Cell Properties</p>
+          <label class="field">
+            <span>Name</span>
+            <input id="cellName" type="text" autocomplete="off">
+          </label>
+          <label class="field">
+            <span>Text</span>
+            <input id="cellText" type="text" autocomplete="off">
+          </label>
+          <label class="field">
+            <span>Render Mode</span>
+            <select id="cellMode">
+              <option value="default">default</option>
+              <option value="html">html</option>
+            </select>
+          </label>
+
+          <div class="swatches">
+            <label class="field">
+              <span>Background</span>
+              <input id="backColor" type="color" value="#ffffff">
+            </label>
+            <label class="field">
+              <span>Text Color</span>
+              <input id="foreColor" type="color" value="#17202f">
+            </label>
+          </div>
+
+          <div class="split-fields">
+            <label class="field">
+              <span>Font</span>
+              <input id="fontFamily" type="text" autocomplete="off" value="sans-serif">
+            </label>
+            <label class="field">
+              <span>Size</span>
+              <input id="fontSize" type="number" min="8" max="72" value="13">
+            </label>
+          </div>
+
+          <label class="check">
+            <input id="fontBold" type="checkbox">
+            <span>Bold</span>
+          </label>
+
+          <label class="field">
+            <span>Text Align</span>
+            <select id="textAlign">
+              <option>TopLeft</option>
+              <option>TopCenter</option>
+              <option>TopRight</option>
+              <option>MiddleLeft</option>
+              <option>MiddleCenter</option>
+              <option>MiddleRight</option>
+              <option>BottomLeft</option>
+              <option>BottomCenter</option>
+              <option>BottomRight</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Image URL</span>
+            <input id="imageUrl" type="url" autocomplete="off" placeholder="data: or relative path">
+          </label>
+
+          <div class="split-fields">
+            <label class="field">
+              <span>Image Layout</span>
+              <select id="imageLayout">
+                <option>None</option>
+                <option>Center</option>
+                <option>Stretch</option>
+                <option>Tile</option>
+                <option>Zoom</option>
+                <option>Fit</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Image Align</span>
+              <select id="imageAlign">
+                <option>TopLeft</option>
+                <option>TopCenter</option>
+                <option>TopRight</option>
+                <option>MiddleLeft</option>
+                <option>MiddleCenter</option>
+                <option>MiddleRight</option>
+                <option>BottomLeft</option>
+                <option>BottomCenter</option>
+                <option>BottomRight</option>
+              </select>
+            </label>
+          </div>
+        </section>
+
+        <section id="rowSection" class="property-section hidden">
+          <p class="section-title">Row Properties</p>
+          <label class="field">
+            <span>Height</span>
+            <input id="rowHeight" type="number" min="10" step="1">
+          </label>
+        </section>
+
+        <section id="colSection" class="property-section hidden">
+          <p class="section-title">Column Properties</p>
+          <label class="field">
+            <span>Width</span>
+            <input id="colWidth" type="number" min="10" step="1">
+          </label>
+        </section>
+
+        <section id="borderSection" class="property-section">
+          <p class="section-title">Border Properties</p>
+          <div class="split-fields">
+            <label class="field">
+              <span>Color</span>
+              <input id="borderColor" type="color" value="#a0a0a0">
+            </label>
+            <label class="field">
+              <span>Width</span>
+              <input id="borderWidth" type="number" min="1" max="12" step="1" value="1">
+            </label>
+          </div>
+
+          <label class="field">
+            <span>Line Style</span>
+            <select id="lineStyle">
+              <option>Solid</option>
+              <option>Dash</option>
+              <option>Dot</option>
+            </select>
+          </label>
+
+          <div class="check-grid">
+            <label class="check">
+              <input id="borderLeft" type="checkbox">
+              <span>Left</span>
+            </label>
+            <label class="check">
+              <input id="borderTop" type="checkbox">
+              <span>Top</span>
+            </label>
+            <label class="check">
+              <input id="borderRight" type="checkbox">
+              <span>Right</span>
+            </label>
+            <label class="check">
+              <input id="borderBottom" type="checkbox">
+              <span>Bottom</span>
+            </label>
+          </div>
+
+          <button id="resetBorder" class="stack">Reset to Inherited</button>
+        </section>
+
+        <section id="gridSection" class="property-section">
+          <p class="section-title">Grid Properties</p>
+          <div class="swatches">
+            <label class="field">
+              <span>Background</span>
+              <input id="gridBackColor" type="color" value="#ffffff">
+            </label>
+            <label class="field">
+              <span>Selection Color</span>
+              <input id="focusColor" type="color" value="#d22f27">
+            </label>
+          </div>
+
+          <label class="check">
+            <input id="expand" type="checkbox">
+            <span>Expand</span>
+          </label>
+        </section>
+
+        <section class="property-section">
+          <p class="section-title">Save / Restore</p>
+          <div class="split-fields">
+            <button id="exportJson">Export JSON</button>
+            <button id="importJson">Import JSON</button>
+          </div>
+          <label class="field">
+            <span>Grid JSON</span>
+            <textarea id="gridJson" class="json-area" spellcheck="false"></textarea>
+          </label>
+        </section>
+
+        <div class="stack">
+          <button id="smoke">Smoke Test</button>
+          <pre id="log" class="log"></pre>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script src="../../packages/spangrid/src/span-grid.js"></script>
+  <script>
+    const {
+      BorderDirection,
+      VERSION,
+      SpanGridBorder,
+      SpanGridControl,
+      SpanGridCol,
+      SpanGridRow,
+      SpanGridCanvasView,
+      createDemoGrid,
+      runSmokeTests,
+    } = window.SpanGrid;
+
+    const version = document.getElementById("version");
+    const canvas = document.getElementById("gridCanvas");
+    const status = document.getElementById("status");
+    const hScroll = document.getElementById("hScroll");
+    const vScroll = document.getElementById("vScroll");
+    const selectGrid = document.getElementById("selectGrid");
+    const cellSection = document.getElementById("cellSection");
+    const rowSection = document.getElementById("rowSection");
+    const colSection = document.getElementById("colSection");
+    const borderSection = document.getElementById("borderSection");
+    const cellText = document.getElementById("cellText");
+    const cellMode = document.getElementById("cellMode");
+    const cellName = document.getElementById("cellName");
+    const backColor = document.getElementById("backColor");
+    const foreColor = document.getElementById("foreColor");
+    const fontFamily = document.getElementById("fontFamily");
+    const fontSize = document.getElementById("fontSize");
+    const fontBold = document.getElementById("fontBold");
+    const textAlign = document.getElementById("textAlign");
+    const imageUrl = document.getElementById("imageUrl");
+    const imageLayout = document.getElementById("imageLayout");
+    const imageAlign = document.getElementById("imageAlign");
+    const rowHeight = document.getElementById("rowHeight");
+    const colWidth = document.getElementById("colWidth");
+    const expand = document.getElementById("expand");
+    const gridBackColor = document.getElementById("gridBackColor");
+    const focusColor = document.getElementById("focusColor");
+    const borderColor = document.getElementById("borderColor");
+    const borderWidth = document.getElementById("borderWidth");
+    const lineStyle = document.getElementById("lineStyle");
+    const borderLeft = document.getElementById("borderLeft");
+    const borderTop = document.getElementById("borderTop");
+    const borderRight = document.getElementById("borderRight");
+    const borderBottom = document.getElementById("borderBottom");
+    const resetBorder = document.getElementById("resetBorder");
+    const zoom = document.getElementById("zoom");
+    const zoomValue = document.getElementById("zoomValue");
+    const scrollMode = document.getElementById("scrollMode");
+    const pasteOverflow = document.getElementById("pasteOverflow");
+    const exportJson = document.getElementById("exportJson");
+    const importJson = document.getElementById("importJson");
+    const gridJson = document.getElementById("gridJson");
+    const log = document.getElementById("log");
+
+    version.textContent = `v${VERSION}`;
+
+    const SPAN_GRID_SHOWCASE_EDIT_KEY = "SpanGrid.showcase.editSnapshot";
+
+    function readShowcaseEditSnapshot() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("source") !== "showcase") return null;
+        const raw = sessionStorage.getItem(SPAN_GRID_SHOWCASE_EDIT_KEY);
+        if (!raw) return null;
+        sessionStorage.removeItem(SPAN_GRID_SHOWCASE_EDIT_KEY);
+        const snapshot = JSON.parse(raw);
+        return snapshot && snapshot.grid ? snapshot : null;
+      } catch (error) {
+        return { error };
+      }
+    }
+
+    const snapshot = readShowcaseEditSnapshot();
+    let initialLoadMessage = "";
+    let grid = createDemoGrid();
+    if (snapshot && snapshot.grid) {
+      try {
+        grid = SpanGridControl.fromJSON(snapshot.grid);
+        initialLoadMessage = `Showcase loaded: ${snapshot.presetTitle || "Current grid"}`;
+      } catch (error) {
+        initialLoadMessage = `Showcase load failed\n${error.message}`;
+      }
+    } else if (snapshot && snapshot.error) {
+      initialLoadMessage = `Showcase load failed\n${snapshot.error.message}`;
+    }
+
+    const view = new SpanGridCanvasView(canvas, grid, {
+      hScroll,
+      vScroll,
+      statusElement: status,
+      pasteOverflow: pasteOverflow.value,
+    });
+    let unsubscribeCellClick = null;
+    let unsubscribeSelectionChange = null;
+
+    function selectedCell() {
+      return grid.selectedCell;
+    }
+
+    function selectedEditableCells() {
+      return grid.selectedCells;
+    }
+
+    function selectedType() {
+      if (grid.selectedBorderLine) return "borderLine";
+      if (grid.selectedCells.length > 1) return "cells";
+      if (grid.selectedCell) return "cell";
+      if (grid.selectedRow) return "row";
+      if (grid.selectedCol) return "col";
+      if (grid.selectedObjects[0] === grid) return "grid";
+      return "none";
+    }
+
+    function setSectionVisible(section, visible) {
+      section.classList.toggle("hidden", !visible);
+      section.querySelectorAll("input, select, button").forEach((field) => {
+        field.disabled = !visible;
+      });
+    }
+
+    function syncInspector() {
+      const cell = selectedCell() || selectedEditableCells()[0] || null;
+      const type = selectedType();
+      setSectionVisible(cellSection, type === "cell" || type === "cells");
+      setSectionVisible(rowSection, type === "row" || (type === "borderLine" && grid.selectedBorderLine.type === "row"));
+      setSectionVisible(colSection, type === "col" || (type === "borderLine" && grid.selectedBorderLine.type === "col"));
+      setSectionVisible(borderSection, ["cell", "cells", "row", "col", "grid", "borderLine"].includes(type));
+
+      if (!cell) {
+        cellName.value = "";
+        cellText.value = "";
+        cellMode.value = "default";
+        imageUrl.value = "";
+      } else {
+        const font = parseFont(cell.font);
+        cellName.value = cell.name;
+        cellText.value = cell.text;
+        cellMode.value = cell.mode || "default";
+        backColor.value = normalizeColor(cell.backColor);
+        foreColor.value = normalizeColor(cell.foreColor);
+        fontFamily.value = font.family;
+        fontSize.value = String(font.size);
+        fontBold.checked = font.bold;
+        textAlign.value = cell.textAlign;
+        imageUrl.value = cell.backgroundImageUrl || "";
+        imageLayout.value = cell.backgroundImageLayout || "None";
+        imageAlign.value = cell.backgroundImageAlign || "TopLeft";
+      }
+
+      if (grid.selectedRow) rowHeight.value = String(grid.selectedRow.height);
+      if (grid.selectedCol) colWidth.value = String(grid.selectedCol.width);
+
+      expand.checked = grid.expand;
+      gridBackColor.value = normalizeColor(grid.backColor);
+      focusColor.value = normalizeColor(grid.focusColor);
+      syncBorderInspector();
+    }
+
+    function syncZoom() {
+      const percent = grid.getZoomPercent();
+      zoom.value = String(percent);
+      zoomValue.value = `${percent}%`;
+      zoomValue.textContent = `${percent}%`;
+    }
+
+    function syncScrollMode() {
+      scrollMode.value = grid.scrollMode;
+    }
+
+    function syncPasteOverflow() {
+      pasteOverflow.value = view.pasteOverflow;
+    }
+
+    function normalizeColor(value) {
+      if (/^#[0-9a-f]{6}$/i.test(value)) return value;
+      return "#ffffff";
+    }
+
+    function selectedBorderTarget() {
+      if (grid.selectedBorderLine) return grid.selectedBorderLine;
+      if (grid.selectedCells.length > 1) return { type: "cells", cells: grid.selectedCells };
+      if (grid.selectedCell) return grid.selectedCell;
+      if (grid.selectedRow) return grid.selectedRow;
+      if (grid.selectedCol) return grid.selectedCol;
+      return grid;
+    }
+
+    function borderForDisplay(target) {
+      if (target === grid) return grid.gridBorder;
+      if (target.type === "row" || target.type === "col") return borderFromLineEffective(target);
+      if (target.type === "cells") return borderFromSelectionEffective(target.cells);
+      if (target.border) return target.border;
+      if (target.row && target.col) return borderFromCellEffective(target);
+      return grid.gridBorder;
+    }
+
+    function borderFromLineEffective(line) {
+      const border = new SpanGridBorder({ color: "#a0a0a0", borderDirection: BorderDirection.None });
+      const cell = line.type === "row" ? grid.getCell(line.index, 0) : grid.getCell(0, line.index);
+      if (!cell) return border;
+      const resolved = grid.resolveCellBorder(cell, line.side);
+      if (resolved.visible) {
+        border.setSide(line.side, {
+          color: resolved.color,
+          lineStyle: resolved.lineStyle,
+          lineWidth: resolved.lineWidth,
+          visible: true,
+        });
+        border.lineStyle = resolved.lineStyle;
+        border.lineWidth = resolved.lineWidth;
+      }
+      return border;
+    }
+
+    function borderFromSelectionEffective(cells) {
+      if (!cells.length) return grid.gridBorder;
+      const bounds = selectedCellIndexBounds(cells);
+      const border = new SpanGridBorder({ color: "#a0a0a0", borderDirection: BorderDirection.None });
+      const sides = [
+        ["top", cells.find((cell) => grid.rows.indexOf(cell.row) === bounds.minRow)],
+        ["bottom", cells.find((cell) => grid.rows.indexOf(cell.row) === bounds.maxRow)],
+        ["left", cells.find((cell) => cell.row.cells.indexOf(cell) === bounds.minCol)],
+        ["right", cells.find((cell) => cell.row.cells.indexOf(cell) === bounds.maxCol)],
+      ];
+      for (const [side, cell] of sides) {
+        if (!cell) continue;
+        const resolved = grid.resolveCellBorder(cell, side);
+        if (!resolved.visible) continue;
+        border.setSide(side, {
+          color: resolved.color,
+          lineStyle: resolved.lineStyle,
+          lineWidth: resolved.lineWidth,
+          visible: true,
+        });
+        border.lineStyle = resolved.lineStyle;
+        border.lineWidth = resolved.lineWidth;
+      }
+      return border;
+    }
+
+    function selectedCellIndexBounds(cells) {
+      return cells.reduce((bounds, cell) => {
+        const row = grid.rows.indexOf(cell.row);
+        const col = cell.row.cells.indexOf(cell);
+        return {
+          minRow: Math.min(bounds.minRow, row),
+          maxRow: Math.max(bounds.maxRow, row),
+          minCol: Math.min(bounds.minCol, col),
+          maxCol: Math.max(bounds.maxCol, col),
+        };
+      }, { minRow: Infinity, maxRow: -1, minCol: Infinity, maxCol: -1 });
+    }
+
+    function borderFromCellEffective(cell) {
+      const sides = ["left", "right", "top", "bottom"];
+      const border = new SpanGridBorder({ color: "#a0a0a0", borderDirection: BorderDirection.None });
+      let firstVisible = null;
+      sides.forEach((side) => {
+        const resolved = grid.resolveCellBorder(cell, side);
+        if (!resolved.visible) return;
+        if (side === "left") border.leftColor = resolved.color;
+        if (side === "right") border.rightColor = resolved.color;
+        if (side === "top") border.topColor = resolved.color;
+        if (side === "bottom") border.bottomColor = resolved.color;
+        border.borderDirection |= BorderDirection[side[0].toUpperCase() + side.slice(1)];
+        if (!firstVisible) firstVisible = resolved;
+      });
+      if (firstVisible) {
+        border.lineStyle = firstVisible.lineStyle;
+        border.lineWidth = firstVisible.lineWidth;
+      }
+      return border;
+    }
+
+    function editableBorder() {
+      const target = selectedBorderTarget();
+      if (target === grid) return grid.gridBorder;
+      if (target.type === "row" || target.type === "col" || target.type === "cells") return null;
+      if (!target.border) {
+        const source = target.row && target.col ? borderFromCellEffective(target) : grid.gridBorder.clone();
+        target.border = source.clone ? source.clone() : new SpanGridBorder({ color: "#a0a0a0" });
+      }
+      return target.border;
+    }
+
+    function syncBorderInspector() {
+      const target = selectedBorderTarget();
+      const border = borderForDisplay(target);
+      borderColor.value = normalizeColor(border.leftColor);
+      borderWidth.value = String(border.lineWidth || 1);
+      lineStyle.value = border.lineStyle || "Solid";
+      borderLeft.checked = (border.borderDirection & BorderDirection.Left) !== 0;
+      borderTop.checked = (border.borderDirection & BorderDirection.Top) !== 0;
+      borderRight.checked = (border.borderDirection & BorderDirection.Right) !== 0;
+      borderBottom.checked = (border.borderDirection & BorderDirection.Bottom) !== 0;
+      syncBorderDirectionAvailability(target);
+      resetBorder.disabled = target === grid || (target.type !== "cells" && target.type !== "row" && target.type !== "col" && !target.border);
+    }
+
+    function syncBorderDirectionAvailability(target) {
+      const fields = { left: borderLeft, top: borderTop, right: borderRight, bottom: borderBottom };
+      Object.values(fields).forEach((field) => {
+        field.disabled = false;
+      });
+      if (target.type === "row" || target.type === "col") {
+        const active = fields[target.side];
+        Object.entries(fields).forEach(([side, field]) => {
+          field.disabled = side !== target.side;
+        });
+        active.checked = true;
+      }
+    }
+
+    function borderTemplateFromInputs() {
+      let direction = BorderDirection.None;
+      if (borderLeft.checked) direction |= BorderDirection.Left;
+      if (borderTop.checked) direction |= BorderDirection.Top;
+      if (borderRight.checked) direction |= BorderDirection.Right;
+      if (borderBottom.checked) direction |= BorderDirection.Bottom;
+      return new SpanGridBorder({
+        color: borderColor.value,
+        borderDirection: direction,
+        lineStyle: lineStyle.value,
+        lineWidth: Number(borderWidth.value) || 1,
+      });
+    }
+
+    function applyBorderInputs() {
+      const target = selectedBorderTarget();
+      const template = borderTemplateFromInputs();
+      if (target.type === "row" || target.type === "col") {
+        const sideBit = BorderDirection[target.side[0].toUpperCase() + target.side.slice(1)];
+        template.borderDirection = (template.borderDirection & sideBit) !== 0 ? sideBit : BorderDirection.None;
+        grid.applyBorderToSelectedLine(template);
+        redraw();
+        return;
+      }
+      if (target.type === "cells") {
+        grid.applyBorderToSelectedCells(template);
+        redraw();
+        return;
+      }
+      const border = editableBorder();
+      border.setColor(borderColor.value);
+      border.setLineWidth(borderWidth.value);
+      border.setLineStyle(lineStyle.value);
+      border.borderDirection = template.borderDirection;
+      if (target === grid) {
+        grid.lineColor = border.leftColor;
+        grid.lineStyle = border.lineStyle;
+      }
+      redraw();
+    }
+
+    function applyToSelectedCells(properties) {
+      if (grid.selectedCells.length === 0) return;
+      grid.applyPropertiesToSelectedCells(properties);
+      view.draw();
+    }
+
+    function parseFont(value) {
+      const text = value || "13px sans-serif";
+      const sizeMatch = text.match(/(\d+(?:\.\d+)?)(px|pt)/i);
+      const size = sizeMatch
+        ? Math.round(Number(sizeMatch[1]) * (sizeMatch[2].toLowerCase() === "pt" ? 4 / 3 : 1))
+        : 13;
+      const family = text
+        .replace(/\bbold\b/gi, "")
+        .replace(/\bnormal\b/gi, "")
+        .replace(sizeMatch ? sizeMatch[0] : "", "")
+        .trim() || "sans-serif";
+      return { bold: /\bbold\b/i.test(text), size, family };
+    }
+
+    function applyFont() {
+      const weight = fontBold.checked ? "bold " : "";
+      const size = Math.max(8, Number(fontSize.value) || 13);
+      const family = fontFamily.value.trim() || "sans-serif";
+      applyToSelectedCells({ font: `${weight}${size}px ${family}` });
+    }
+
+    function setBorderDirectionFromInputs() {
+      applyBorderInputs();
+    }
+
+    function setBorderColor(value) {
+      borderColor.value = value;
+      applyBorderInputs();
+    }
+
+    function setCellImageUrl(value) {
+      const cells = selectedEditableCells();
+      if (cells.length === 0) return;
+      cells.forEach((cell) => {
+        cell.backgroundImageUrl = value;
+      });
+      if (!value) {
+        cells.forEach((cell) => {
+          cell.backgroundImage = null;
+        });
+        view.draw();
+        return;
+      }
+      const image = new Image();
+      image.onload = () => view.draw();
+      image.onerror = () => {
+        cells.forEach((cell) => {
+          cell.backgroundImage = null;
+        });
+        view.draw();
+      };
+      cells.forEach((cell) => {
+        cell.backgroundImage = image;
+      });
+      image.src = value;
+      view.draw();
+    }
+
+    function redraw() {
+      view.draw();
+      syncInspector();
+      syncZoom();
+      syncScrollMode();
+      syncPasteOverflow();
+    }
+
+    function bindGridEvents() {
+      if (unsubscribeCellClick) unsubscribeCellClick();
+      if (unsubscribeSelectionChange) unsubscribeSelectionChange();
+      unsubscribeCellClick = grid.onCellClick(syncInspector);
+      unsubscribeSelectionChange = grid.onSelectionChange(syncInspector);
+    }
+
+    function loadImagesForGrid(targetGrid) {
+      const cache = new Map();
+      for (const row of targetGrid.rows) {
+        for (const cell of row.cells) {
+          const url = cell.backgroundImageUrl;
+          if (!url) {
+            cell.backgroundImage = null;
+            continue;
+          }
+          if (!cache.has(url)) {
+            const image = new Image();
+            image.onload = () => view.draw();
+            image.onerror = () => view.draw();
+            image.src = url;
+            cache.set(url, image);
+          }
+          cell.backgroundImage = cache.get(url);
+        }
+      }
+    }
+
+    function replaceGrid(nextGrid) {
+      grid = nextGrid;
+      view.grid = grid;
+      bindGridEvents();
+      loadImagesForGrid(grid);
+      grid.selectCell(0, 0);
+      redraw();
+    }
+
+    bindGridEvents();
+    selectGrid.addEventListener("click", () => {
+      grid.selectGrid();
+      redraw();
+    });
+    canvas.addEventListener("mouseup", syncInspector);
+    canvas.addEventListener("mouseleave", syncInspector);
+    canvas.addEventListener("mousemove", () => {
+      if (view.resizeTarget) syncInspector();
+    });
+
+    document.getElementById("addRow").addEventListener("click", () => {
+      const row = grid.addRow(new SpanGridRow({ height: 34 }));
+      const rowIndex = grid.rows.indexOf(row);
+      row.cells.forEach((cell, colIndex) => {
+        cell.text = colIndex === 0 ? `Item ${rowIndex}` : `R${rowIndex} C${colIndex}`;
+        cell.textAlign = colIndex === 0 ? "MiddleLeft" : "MiddleCenter";
+      });
+      grid.selectRow(row);
+      redraw();
+    });
+
+    document.getElementById("addCol").addEventListener("click", () => {
+      const col = grid.addCol(new SpanGridCol({ width: 120 }));
+      const colIndex = grid.cols.indexOf(col);
+      grid.rows.forEach((row, rowIndex) => {
+        const cell = row.cells[colIndex];
+        cell.text = rowIndex === 0 ? `Col ${colIndex}` : `R${rowIndex} C${colIndex}`;
+        cell.backColor = rowIndex === 0 ? "#253449" : rowIndex % 2 === 0 ? "#f6f8fb" : "#ffffff";
+        cell.foreColor = rowIndex === 0 ? "#ffffff" : "#17202f";
+        cell.font = rowIndex === 0 ? "bold 13px sans-serif" : "9pt sans-serif";
+      });
+      grid.selectCol(col);
+      redraw();
+    });
+
+    document.getElementById("merge").addEventListener("click", () => {
+      grid.mergeSelectedCells();
+      redraw();
+    });
+
+    document.getElementById("split").addEventListener("click", () => {
+      grid.splitSelectedCell();
+      redraw();
+    });
+
+    document.getElementById("fix").addEventListener("click", () => {
+      if (selectedCell()) grid.setFixedCell(selectedCell());
+      redraw();
+    });
+
+    document.getElementById("clearFix").addEventListener("click", () => {
+      grid.clearFixed();
+      redraw();
+    });
+
+    document.getElementById("clearMerge").addEventListener("click", () => {
+      grid.merges.length = 0;
+      grid.layout();
+      redraw();
+    });
+
+    cellName.addEventListener("input", () => {
+      applyToSelectedCells({ name: cellName.value });
+    });
+
+    cellText.addEventListener("input", () => {
+      applyToSelectedCells({ text: cellText.value });
+    });
+
+    cellMode.addEventListener("change", () => {
+      applyToSelectedCells({ mode: cellMode.value });
+    });
+
+    backColor.addEventListener("input", () => {
+      applyToSelectedCells({ backColor: backColor.value });
+    });
+
+    foreColor.addEventListener("input", () => {
+      applyToSelectedCells({ foreColor: foreColor.value });
+    });
+
+    fontFamily.addEventListener("input", applyFont);
+    fontSize.addEventListener("input", applyFont);
+    fontBold.addEventListener("change", applyFont);
+
+    textAlign.addEventListener("change", () => {
+      applyToSelectedCells({ textAlign: textAlign.value });
+    });
+
+    imageUrl.addEventListener("change", () => setCellImageUrl(imageUrl.value.trim()));
+    imageLayout.addEventListener("change", () => {
+      applyToSelectedCells({ backgroundImageLayout: imageLayout.value });
+    });
+    imageAlign.addEventListener("change", () => {
+      applyToSelectedCells({ backgroundImageAlign: imageAlign.value });
+    });
+
+    rowHeight.addEventListener("input", () => {
+      if (!grid.selectedRow) return;
+      grid.setRowHeight(grid.selectedRow, rowHeight.value);
+      redraw();
+    });
+
+    colWidth.addEventListener("input", () => {
+      if (!grid.selectedCol) return;
+      grid.setColWidth(grid.selectedCol, colWidth.value);
+      redraw();
+    });
+
+    expand.addEventListener("change", () => {
+      grid.expand = expand.checked;
+      grid.scrollTo(0, 0);
+      redraw();
+    });
+
+    gridBackColor.addEventListener("input", () => {
+      grid.backColor = gridBackColor.value;
+      view.draw();
+    });
+
+    focusColor.addEventListener("input", () => {
+      grid.focusColor = focusColor.value;
+      view.draw();
+    });
+
+    borderColor.addEventListener("input", () => setBorderColor(borderColor.value));
+    borderWidth.addEventListener("input", applyBorderInputs);
+    lineStyle.addEventListener("change", applyBorderInputs);
+    [borderLeft, borderTop, borderRight, borderBottom].forEach((field) => {
+      field.addEventListener("change", setBorderDirectionFromInputs);
+    });
+    resetBorder.addEventListener("click", () => {
+      const target = selectedBorderTarget();
+      if (target.type === "row" || target.type === "col") {
+        if (target.item.border) {
+          target.item.border.inheritUnspecified = true;
+          target.item.border.setSide(target.side, { visible: false });
+        }
+        redraw();
+      } else if (target.type === "cells") {
+        target.cells.forEach((cell) => {
+          cell.border = null;
+        });
+        redraw();
+      } else if (target !== grid) {
+        target.border = null;
+        redraw();
+      }
+    });
+
+    zoom.addEventListener("input", () => {
+      grid.setZoomPercent(Number(zoom.value));
+      redraw();
+    });
+
+    scrollMode.addEventListener("change", () => {
+      grid.setScrollMode(scrollMode.value);
+      redraw();
+    });
+
+    pasteOverflow.addEventListener("change", () => {
+      view.pasteOverflow = pasteOverflow.value === "expand" ? "expand" : "truncate";
+      syncPasteOverflow();
+    });
+
+    exportJson.addEventListener("click", () => {
+      gridJson.value = JSON.stringify(grid.toJSON(), null, 2);
+      log.textContent = "JSON exported";
+    });
+
+    importJson.addEventListener("click", () => {
+      try {
+        const snapshot = JSON.parse(gridJson.value);
+        replaceGrid(SpanGridControl.fromJSON(snapshot));
+        log.textContent = "JSON imported";
+      } catch (error) {
+        log.textContent = `JSON import failed\n${error.message}`;
+      }
+    });
+
+    document.getElementById("smoke").addEventListener("click", () => {
+      const result = runSmokeTests();
+      log.textContent = `${result.ok ? "PASS" : "FAIL"}\n${result.messages.join("\n")}`;
+    });
+
+    grid.selectCell(0, 0);
+    if (snapshot && snapshot.grid) {
+      loadImagesForGrid(grid);
+    }
+    redraw();
+    if (initialLoadMessage) {
+      log.textContent = initialLoadMessage;
+    }
+  </script>
+</body>
+</html>

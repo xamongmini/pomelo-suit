@@ -1,0 +1,33 @@
+{
+  "name": "pomelo-suite",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Canvas SpanGrid control for web applications.",
+  "type": "commonjs",
+  "workspaces": [
+    "packages/spangrid"
+  ],
+  "scripts": {
+    "test": "node --test tests/*.test.js && npm run test --workspace @pomelo-suite/spangrid --if-present",
+    "lint:syntax": "node scripts/check-js-syntax.cjs",
+    "check": "npm run lint:syntax && npm test",
+    "pack:dry-run": "npm pack --workspace @pomelo-suite/spangrid --dry-run"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xamongmini/pomelo-suite.git"
+  },
+  "keywords": [
+    "pomelo-suite",
+    "canvas",
+    "grid",
+    "data-grid",
+    "spangrid"
+  ],
+  "author": "xamongmini",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/xamongmini/pomelo-suite/issues"
+  },
+  "homepage": "https://github.com/xamongmini/pomelo-suite#readme"
+}
